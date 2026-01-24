@@ -51,9 +51,11 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+app = FastAPI(title="Sleep Meditation Generator API", version="0.1.0")
+
 @app.get("/")
 async def root():
-    return {"message": "Hello from AI Interviewer Backend!"}
+    return {"message": "Sleep Meditation Generator Backend Running"}
 
 @app.get("/health")
 async def health_check():
