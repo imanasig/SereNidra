@@ -1,63 +1,93 @@
-import { useState } from 'react';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../config/firebase"; // adjust path if needed
 
 const SignupForm = () => {
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        password: ''
+        fullName: "",
+        email: "",
+        password: "",
     });
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [success, setSuccess] = useState("");
 
     const validate = () => {
         const newErrors = {};
+
         if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Full Name is required';
+            newErrors.fullName = "Full Name is required";
         }
 
         if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
+            newErrors.email = "Email is required";
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Email is invalid';
+            newErrors.email = "Email is invalid";
         }
 
         if (!formData.password) {
-            newErrors.password = 'Password is required';
+            newErrors.password = "Password is required";
         } else if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+            newErrors.password = "Password must be at least 6 characters";
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (validate()) {
-            setIsSubmitting(true);
-            // Simulate API call
+
+        if (!validate()) return;
+
+        setIsSubmitting(true);
+        setErrors({});
+        setSuccess("");
+
+        try {
+            await createUserWithEmailAndPassword(
+                auth,
+                formData.email,
+                formData.password
+            );
+
+            setSuccess("Account created successfully! Redirecting to login...");
+
             setTimeout(() => {
-                alert('Signup Successful!');
-                setIsSubmitting(false);
-                setFormData({ fullName: '', email: '', password: '' });
-            }, 1000);
+                navigate("/login");
+            }, 1500);
+        } catch (err) {
+            console.error(err);
+
+            if (err.code === "auth/email-already-in-use") {
+                setErrors({ email: "Email already in use" });
+            } else if (err.code === "auth/weak-password") {
+                setErrors({ password: "Password must be at least 6 characters" });
+            } else {
+                setErrors({ general: "Signup failed. Please try again." });
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+
+        setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
-        // Clear error when user starts typing
+
         if (errors[name]) {
-            setErrors(prev => ({
+            setErrors((prev) => ({
                 ...prev,
-                [name]: null
+                [name]: null,
             }));
         }
     };
@@ -76,9 +106,24 @@ const SignupForm = () => {
                     </p>
                 </div>
 
+                {success && (
+                    <p className="text-green-600 text-sm text-center mb-4">
+                        {success}
+                    </p>
+                )}
+
+                {errors.general && (
+                    <p className="text-rose-500 text-sm text-center mb-4">
+                        {errors.general}
+                    </p>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Full Name */}
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Full Name</label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
+                            Full Name
+                        </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <User className="h-5 w-5 text-gray-400" />
@@ -88,15 +133,25 @@ const SignupForm = () => {
                                 name="fullName"
                                 value={formData.fullName}
                                 onChange={handleChange}
-                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.fullName ? 'border-rose-500 ring-rose-200' : 'border-gray-200 dark:border-gray-700 focus:ring-violet-500/20 focus:border-violet-500'} rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm focus:outline-none focus:ring-4 transition-all duration-200 sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400`}
                                 placeholder="John Doe"
+                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.fullName
+                                        ? "border-rose-500"
+                                        : "border-gray-200 dark:border-gray-700 focus:border-violet-500"
+                                    } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
                             />
                         </div>
-                        {errors.fullName && <p className="text-rose-500 text-xs mt-1 ml-1">{errors.fullName}</p>}
+                        {errors.fullName && (
+                            <p className="text-rose-500 text-xs mt-1 ml-1">
+                                {errors.fullName}
+                            </p>
+                        )}
                     </div>
 
+                    {/* Email */}
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Email Address</label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
+                            Email Address
+                        </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Mail className="h-5 w-5 text-gray-400" />
@@ -106,15 +161,25 @@ const SignupForm = () => {
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.email ? 'border-rose-500 ring-rose-200' : 'border-gray-200 dark:border-gray-700 focus:ring-violet-500/20 focus:border-violet-500'} rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm focus:outline-none focus:ring-4 transition-all duration-200 sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400`}
                                 placeholder="you@example.com"
+                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.email
+                                        ? "border-rose-500"
+                                        : "border-gray-200 dark:border-gray-700 focus:border-violet-500"
+                                    } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
                             />
                         </div>
-                        {errors.email && <p className="text-rose-500 text-xs mt-1 ml-1">{errors.email}</p>}
+                        {errors.email && (
+                            <p className="text-rose-500 text-xs mt-1 ml-1">
+                                {errors.email}
+                            </p>
+                        )}
                     </div>
 
+                    {/* Password */}
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Password</label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
+                            Password
+                        </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Lock className="h-5 w-5 text-gray-400" />
@@ -124,19 +189,26 @@ const SignupForm = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.password ? 'border-rose-500 ring-rose-200' : 'border-gray-200 dark:border-gray-700 focus:ring-violet-500/20 focus:border-violet-500'} rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm focus:outline-none focus:ring-4 transition-all duration-200 sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400`}
                                 placeholder="••••••••"
+                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.password
+                                        ? "border-rose-500"
+                                        : "border-gray-200 dark:border-gray-700 focus:border-violet-500"
+                                    } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
                             />
                         </div>
-                        {errors.password && <p className="text-rose-500 text-xs mt-1 ml-1">{errors.password}</p>}
+                        {errors.password && (
+                            <p className="text-rose-500 text-xs mt-1 ml-1">
+                                {errors.password}
+                            </p>
+                        )}
                     </div>
 
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transform transition-all duration-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center py-3 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50"
                     >
-                        {isSubmitting ? 'Creating Account...' : (
+                        {isSubmitting ? "Creating Account..." : (
                             <>
                                 Sign Up <ArrowRight className="ml-2 h-4 w-4" />
                             </>
@@ -146,8 +218,8 @@ const SignupForm = () => {
 
                 <div className="mt-6 text-center">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Already have an account?{' '}
-                        <Link to="/login" className="font-medium text-violet-600 hover:text-violet-500 transition-colors">
+                        Already have an account?{" "}
+                        <Link to="/login" className="text-violet-600 hover:underline">
                             Log in
                         </Link>
                     </p>
