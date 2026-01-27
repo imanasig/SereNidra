@@ -43,6 +43,8 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+from typing import List
+
 @app.post("/api/meditations/generate", response_model=schemas.MeditationResponse)
 async def generate_meditation(
     request: schemas.MeditationRequest, 
@@ -76,6 +78,43 @@ async def generate_meditation(
     except Exception as e:
         print(f"Error generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/meditations", response_model=List[schemas.MeditationResponse])
+async def get_meditations(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        meditations = db.query(models.MeditationSession)\
+            .filter(models.MeditationSession.user_id == user['uid'])\
+            .order_by(models.MeditationSession.created_at.desc())\
+            .all()
+        return meditations
+    except Exception as e:
+        print(f"Error fetching meditations: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch meditation history")
+
+@app.get("/api/meditations/{meditation_id}", response_model=schemas.MeditationResponse)
+async def get_meditation_by_id(
+    meditation_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        meditation = db.query(models.MeditationSession)\
+            .filter(models.MeditationSession.id == meditation_id)\
+            .filter(models.MeditationSession.user_id == user['uid'])\
+            .first()
+            
+        if not meditation:
+            raise HTTPException(status_code=404, detail="Meditation session not found")
+            
+        return meditation
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error fetching meditation {meditation_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch meditation details")
 
 @app.get("/api/random-quote")
 async def get_random_quote():
