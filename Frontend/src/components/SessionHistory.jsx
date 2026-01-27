@@ -1,36 +1,85 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import SessionCard from './SessionCard';
-import { History } from 'lucide-react';
+import { History, Loader2, AlertCircle } from 'lucide-react';
 
 const SessionHistory = () => {
-    // Placeholder data - in a real app this would come from the backend
-    const sessions = [
-        { id: 1, title: 'Deep Sleep Journey', date: 'Oct 24, 2023', duration: '20 min', type: 'Sleep' },
-        { id: 2, title: 'Morning Clarity', date: 'Oct 23, 2023', duration: '10 min', type: 'Focus' },
-        { id: 3, title: 'Anxiety Relief', date: 'Oct 21, 2023', duration: '15 min', type: 'Relaxation' },
-    ];
+    const [sessions, setSessions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchSessions = async () => {
+            if (!currentUser) return;
+
+            try {
+                setLoading(true);
+                const token = await currentUser.getIdToken();
+                const response = await fetch('http://localhost:8000/api/meditations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch sessions');
+                }
+
+                const data = await response.json();
+                // Take only top 3 for the widget
+                setSessions(data.slice(0, 3));
+            } catch (err) {
+                console.error("Error fetching sessions:", err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSessions();
+    }, [currentUser]);
 
     return (
-        <div className="glass rounded-3xl p-8 border border-white/20 dark:border-gray-800/30 h-full">
+        <div className="glass rounded-3xl p-8 border border-white/20 dark:border-gray-800/30 h-full flex flex-col">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <History className="h-5 w-5 text-violet-600" />
                     Recent Sessions
                 </h3>
-                <button className="text-sm font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 hover:underline">
+                <button
+                    onClick={() => navigate('/history')}
+                    className="text-sm font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 hover:underline"
+                >
                     View All
                 </button>
             </div>
 
-            <div className="space-y-4">
-                {sessions.map(session => (
+            <div className="space-y-4 flex-grow overflow-y-auto custom-scrollbar">
+                {loading && (
+                    <div className="flex justify-center py-10">
+                        <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
+                    </div>
+                )}
+
+                {error && (
+                    <div className="text-rose-500 text-sm flex items-center gap-2 bg-rose-50 p-3 rounded-lg">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Failed to load history</span>
+                    </div>
+                )}
+
+                {!loading && !error && sessions.length === 0 && (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                        No sessions found. Start generating!
+                    </div>
+                )}
+
+                {!loading && !error && sessions.map(session => (
                     <SessionCard key={session.id} session={session} />
                 ))}
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700/50 text-center">
-                <p className="text-xs text-gray-400">
-                    Your recent meditation history will appear here.
-                </p>
             </div>
         </div>
     );

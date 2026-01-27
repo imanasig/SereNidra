@@ -1,35 +1,56 @@
-import { Play, Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const SessionCard = ({ session }) => {
-    return (
-        <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-sm rounded-xl p-5 border border-gray-100 dark:border-gray-700/50 hover:border-violet-200 dark:hover:border-violet-800/50 hover:shadow-md transition-all duration-300 group">
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400 group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300">
-                        <Play className="h-5 w-5 ml-0.5" />
-                    </div>
-                    <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                            {session.title}
-                        </h4>
-                        <span className="text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-2 py-0.5 rounded-full">
-                            {session.type}
-                        </span>
-                    </div>
-                </div>
-            </div>
+    // Format date
+    const date = new Date(session.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-                <div className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>{session.date}</span>
+    // Truncate script for preview (approx 100 chars)
+    const preview = session.script.length > 150
+        ? session.script.substring(0, 150) + "..."
+        : session.script;
+
+    return (
+        <Link to={`/session/${session.id}`} className="block">
+            <div className="glass rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 group cursor-pointer h-full flex flex-col">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-violet-100 text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300">
+                            <Sparkles className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-800 capitalize">{session.type.replace('-', ' ')}</h3>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> {session.duration} min
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" /> {date}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{session.duration}</span>
+
+                <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                    {preview}
+                </p>
+
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                    <span className="text-xs font-medium text-gray-400 capitalize px-2 py-1 bg-gray-50 rounded-lg">
+                        {session.tone || 'Standard'} Voice
+                    </span>
+                    <span className="text-sm font-semibold text-violet-600 group-hover:translate-x-1 transition-transform">
+                        View Script &rarr;
+                    </span>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 };
 
