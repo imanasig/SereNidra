@@ -10,4 +10,5 @@ class MeditationSession(Base):
     preferences = Column(String, nullable=True)
     tone = Column(String, nullable=True)
     script = Column(Text)
+    user_id = Column(String, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
