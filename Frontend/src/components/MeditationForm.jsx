@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowRight, Moon, Sun, Zap, Check, Sparkles } from 'lucide-react';
+import { ArrowRight, Moon, Sun, Zap, Check, Sparkles, AlertCircle } from 'lucide-react';
+import ScriptDisplay from './ScriptDisplay';
 
 const MeditationForm = () => {
     const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ const MeditationForm = () => {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [generatedScript, setGeneratedScript] = useState(null);
+    const [apiError, setApiError] = useState(null);
 
     const voiceOptions = [
         { value: 'calm-soothing', label: 'Calm, soothing whisper' },
@@ -39,13 +42,34 @@ const MeditationForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setApiError(null);
+
         if (validate()) {
             setIsSubmitting(true);
-            // Simulate API call/Generation delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            console.log('Form Data Submitted:', formData);
-            alert('Meditation generation started! (Check console for data)');
-            setIsSubmitting(false);
+
+            try {
+                const response = await fetch('http://localhost:8000/api/meditations/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to generate meditation script');
+                }
+
+                const data = await response.json();
+                setGeneratedScript(data.script);
+
+            } catch (err) {
+                console.error("API Error:", err);
+                setApiError(err.message || "Something went wrong while generating the script. Please try again.");
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -53,11 +77,22 @@ const MeditationForm = () => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+        if (apiError) setApiError(null);
     };
 
     const setType = (id) => {
         setFormData(prev => ({ ...prev, type: id }));
     };
+
+    const handleReset = () => {
+        setGeneratedScript(null);
+        setApiError(null);
+        // Optional: Reset form data or keep it for easy modification
+    };
+
+    if (generatedScript) {
+        return <ScriptDisplay script={generatedScript} onReset={handleReset} />;
+    }
 
     return (
         <div className="max-w-3xl mx-auto">
@@ -69,6 +104,13 @@ const MeditationForm = () => {
                     Customize every aspect of your session for a perfect experience.
                 </p>
             </div>
+
+            {apiError && (
+                <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start space-x-3 text-rose-600 animate-fade-in">
+                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                    <p className="text-sm font-medium">{apiError}</p>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="glass rounded-3xl p-8 space-y-8 border border-gray-200 shadow-xl">
 
