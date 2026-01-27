@@ -3,7 +3,7 @@ import Landing from './pages/Landing';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import QuoteGenerator from './components/QuoteGenerator';
+import MeditationForm from './components/MeditationForm';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
           path="/generate"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900"><QuoteGenerator /></div>
+              <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50"><MeditationForm /></div>
             </ProtectedRoute>
           }
         />
