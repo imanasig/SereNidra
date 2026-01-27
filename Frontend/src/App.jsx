@@ -3,6 +3,7 @@ import Landing from './pages/Landing';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import History from './pages/History';
 import MeditationForm from './components/MeditationForm';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -28,6 +29,29 @@ function App() {
           element={
             <ProtectedRoute>
               <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50"><MeditationForm /></div>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/session/:id"
+          element={
+            <ProtectedRoute>
+              <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Session Detail</h2>
+                  <p className="text-gray-500">Coming soon in the next update.</p>
+                </div>
+              </div>
             </ProtectedRoute>
           }
         />
