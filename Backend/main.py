@@ -115,6 +115,30 @@ async def get_meditation_by_id(
     except Exception as e:
         print(f"Error fetching meditation {meditation_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch meditation details")
+@app.delete("/api/meditations/{meditation_id}")
+async def delete_meditation(
+    meditation_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        meditation = db.query(models.MeditationSession)\
+            .filter(models.MeditationSession.id == meditation_id)\
+            .filter(models.MeditationSession.user_id == user['uid'])\
+            .first()
+            
+        if not meditation:
+            raise HTTPException(status_code=404, detail="Meditation session not found or unauthorized")
+            
+        db.delete(meditation)
+        db.commit()
+        
+        return {"message": "Session deleted successfully"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error deleting meditation {meditation_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete session")
 
 @app.get("/api/random-quote")
 async def get_random_quote():
