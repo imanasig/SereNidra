@@ -8,6 +8,7 @@ from database import engine, get_db
 import models
 import schemas
 from services.llm_service import generate_meditation_script
+from auth import get_current_user
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,7 +44,11 @@ async def health_check():
     return {"status": "healthy"}
 
 @app.post("/api/meditations/generate", response_model=schemas.MeditationResponse)
-async def generate_meditation(request: schemas.MeditationRequest, db: Session = Depends(get_db)):
+async def generate_meditation(
+    request: schemas.MeditationRequest, 
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
     try:
         # Generate script using LangChain/Gemini
         script = generate_meditation_script(
@@ -59,7 +64,8 @@ async def generate_meditation(request: schemas.MeditationRequest, db: Session = 
             duration=request.duration,
             preferences=request.preferences,
             tone=request.tone,
-            script=script
+            script=script,
+            user_id=user['uid']
         )
         db.add(db_session)
         db.commit()

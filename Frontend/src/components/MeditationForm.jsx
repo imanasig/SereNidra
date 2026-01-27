@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Moon, Sun, Zap, Check, Sparkles, AlertCircle } from 'lucide-react';
 import ScriptDisplay from './ScriptDisplay';
+import { useAuth } from '../context/AuthContext';
 
 const MeditationForm = () => {
     const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ const MeditationForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [generatedScript, setGeneratedScript] = useState(null);
     const [apiError, setApiError] = useState(null);
+    const { currentUser } = useAuth();
 
     const voiceOptions = [
         { value: 'calm-soothing', label: 'Calm, soothing whisper' },
@@ -48,10 +50,17 @@ const MeditationForm = () => {
             setIsSubmitting(true);
 
             try {
+                if (!currentUser) {
+                    throw new Error("You must be logged in to generate a meditation.");
+                }
+
+                const token = await currentUser.getIdToken();
+
                 const response = await fetch('http://localhost:8000/api/meditations/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(formData),
                 });
@@ -127,8 +136,8 @@ const MeditationForm = () => {
                                     type="button"
                                     onClick={() => setType(type.id)}
                                     className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-3 ${isSelected
-                                            ? 'border-violet-600 bg-violet-50'
-                                            : 'border-gray-100 hover:border-violet-200 hover:bg-gray-50'
+                                        ? 'border-violet-600 bg-violet-50'
+                                        : 'border-gray-100 hover:border-violet-200 hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className={`p-3 rounded-full ${type.bg} ${type.color}`}>
