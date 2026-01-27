@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const LoginForm = () => {
     const [formData, setFormData] = useState({
@@ -10,6 +11,10 @@ const LoginForm = () => {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [authError, setAuthError] = useState('');
+
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const validate = () => {
         const newErrors = {};
@@ -28,16 +33,28 @@ const LoginForm = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setAuthError('');
+
         if (validate()) {
             setIsSubmitting(true);
-            // Simulate API call
-            setTimeout(() => {
-                alert('Login Successful!');
+            try {
+                await login(formData.email, formData.password);
+                navigate('/dashboard');
+            } catch (error) {
+                console.error("Login Error:", error);
+                let errorMessage = 'Failed to log in. Please check your credentials.';
+
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = 'Invalid email or password.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = 'Too many failed attempts. Please try again later.';
+                }
+
+                setAuthError(errorMessage);
                 setIsSubmitting(false);
-                setFormData({ email: '', password: '' });
-            }, 1000);
+            }
         }
     };
 
@@ -54,6 +71,7 @@ const LoginForm = () => {
                 [name]: null
             }));
         }
+        if (authError) setAuthError('');
     };
 
     return (
@@ -69,6 +87,13 @@ const LoginForm = () => {
                         Login to continue your journey to better sleep.
                     </p>
                 </div>
+
+                {authError && (
+                    <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/50 rounded-xl flex items-start space-x-3 animate-fade-in">
+                        <AlertCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-rose-600 dark:text-rose-400">{authError}</p>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-1">
@@ -113,9 +138,14 @@ const LoginForm = () => {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transform transition-all duration-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transform transition-all duration-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     >
-                        {isSubmitting ? 'Logging In...' : (
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                                Logging In...
+                            </>
+                        ) : (
                             <>
                                 Login <ArrowRight className="ml-2 h-4 w-4" />
                             </>
