@@ -82,20 +82,29 @@ const ScriptDisplay = ({ script, onReset }) => {
                             ref={contentRef}
                             className="prose prose-lg md:prose-xl prose-slate dark:prose-invert max-w-none font-serif leading-loose text-gray-700 dark:text-gray-300 whitespace-pre-wrap selection:bg-violet-100 selection:text-violet-900"
                         >
-                            {script.split(/(\*\*.*?\*\*|\[.*?\])/).map((part, index) => {
-                                if (part.startsWith('**') && part.endsWith('**')) {
-                                    return <strong key={index} className="text-violet-700 dark:text-violet-400 font-bold">{part.slice(2, -2)}</strong>;
-                                }
-                                if (part.startsWith('[') && part.endsWith(']')) {
-                                    return (
-                                        <span key={index} className="inline-flex items-center mx-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800 select-none">
-                                            <Sparkles className="w-3 h-3 mr-1 opacity-70" />
-                                            {part.slice(1, -1)}
-                                        </span>
-                                    );
-                                }
-                                return part;
-                            })}
+                            {script
+                                // Logic to process script for better spacing
+                                .replace(/\n{3,}/g, '\n\n')
+                                .replace(/\n\s*(\[.*?\])\s*\n/g, '$1')
+                                .replace(/\n\s*(\[.*?\])/g, '$1')
+                                .replace(/(\[.*?\])\s*\n/g, '$1')
+
+                                .split(/(\*\*.*?\*\*|\[.*?\])/).map((part, index) => {
+                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                        return <strong key={index} className="text-violet-700 dark:text-violet-400 font-bold">{part.slice(2, -2)}</strong>;
+                                    }
+                                    if (part.startsWith('[') && part.endsWith(']')) {
+                                        return (
+                                            <div key={index} className="my-1 flex justify-start">
+                                                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800 select-none shadow-sm cursor-default">
+                                                    <Sparkles className="w-3 h-3 mr-2 opacity-70" />
+                                                    {part.slice(1, -1)}
+                                                </span>
+                                            </div>
+                                        );
+                                    }
+                                    return part;
+                                })}
                         </div>
                     </div>
 

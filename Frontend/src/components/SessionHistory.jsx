@@ -43,7 +43,7 @@ const SessionHistory = () => {
     }, [currentUser]);
 
     return (
-        <div className="glass rounded-3xl p-8 border border-white/20 dark:border-gray-800/30 h-full flex flex-col">
+        <div className="rounded-[2rem] p-8 border border-white/60 bg-gradient-to-br from-white via-purple-50/50 to-purple-100/50 backdrop-blur-xl h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <History className="h-5 w-5 text-violet-600" />

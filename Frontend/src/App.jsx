@@ -1,11 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
+import About from './pages/About';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import MeditationForm from './components/MeditationForm';
 import ProtectedRoute from './components/ProtectedRoute';
+
+import MeditationDetailsPage from './pages/MeditationDetailsPage';
 
 function App() {
   return (
@@ -46,18 +49,13 @@ function App() {
           path="/session/:id"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Session Detail</h2>
-                  <p className="text-gray-500">Coming soon in the next update.</p>
-                </div>
-              </div>
+              <MeditationDetailsPage />
             </ProtectedRoute>
           }
         />
 
         {/* Placeholder routes for navigation links */}
-        <Route path="/about" element={<div className="min-h-screen flex items-center justify-center text-2xl">About Page Placeholder</div>} />
+        <Route path="/about" element={<About />} />
         <Route path="/features" element={<div className="min-h-screen flex items-center justify-center text-2xl">Features Page Placeholder</div>} />
         <Route path="/pricing" element={<div className="min-h-screen flex items-center justify-center text-2xl">Pricing Page Placeholder</div>} />
         <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center text-2xl">Contact Page Placeholder</div>} />
