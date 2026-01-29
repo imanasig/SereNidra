@@ -35,6 +35,12 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/about"
+                  className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+                >
+                  About Us
+                </Link>
                 <div className="flex items-center gap-4 pl-4 border-l border-gray-200 dark:border-gray-700">
                   <span className="hidden sm:block text-sm font-medium text-gray-500 dark:text-gray-400">
                     {currentUser.email?.split('@')[0]}

@@ -25,3 +25,12 @@ class MeditationResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class SearchMatchInfo(BaseModel):
+    matched_in: str  # "script", "type", "audio_script", "none"
+    snippet: Optional[str] = None
+
+class MeditationSearchResponse(BaseModel):
+    session: MeditationResponse
+    match_info: SearchMatchInfo
+

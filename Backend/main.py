@@ -43,7 +43,9 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
-from typing import List
+
+from typing import List, Optional
+from sqlalchemy import or_
 
 @app.post("/api/meditations/generate", response_model=schemas.MeditationResponse)
 async def generate_meditation(
@@ -80,6 +82,87 @@ async def generate_meditation(
     except Exception as e:
         print(f"Error generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/meditations/search", response_model=List[schemas.MeditationSearchResponse])
+async def search_meditations(
+    query: Optional[str] = None,
+    type: Optional[str] = None,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        db_query = db.query(models.MeditationSession).filter(models.MeditationSession.user_id == user['uid'])
+        
+        # Apply filters first to narrow down results
+        if query:
+            search_pattern = f"%{query}%"
+            # Search in script, audio_script, and type
+            db_query = db_query.filter(
+                or_(
+                    models.MeditationSession.script.ilike(search_pattern),
+                    models.MeditationSession.audio_script.ilike(search_pattern),
+                    models.MeditationSession.type.ilike(search_pattern)
+                )
+            )
+            
+        if type:
+            db_query = db_query.filter(models.MeditationSession.type == type)
+            
+        results = db_query.order_by(models.MeditationSession.created_at.desc()).all()
+        
+        # Format response with match info
+        formatted_results = []
+        for session in results:
+            match_source = "none"
+            snippet = None
+            
+            if query:
+                lower_query = query.lower()
+                # Check script match
+                if session.script and lower_query in session.script.lower():
+                    match_source = "script"
+                    # Create snippet
+                    try:
+                        idx = session.script.lower().find(lower_query)
+                        start = max(0, idx - 40)
+                        end = min(len(session.script), idx + len(query) + 40)
+                        snippet = "..." + session.script[start:end] + "..."
+                    except:
+                        snippet = session.script[:100] + "..."
+                
+                # Check audio script match (priority lower than visual script)
+                elif session.audio_script and lower_query in session.audio_script.lower():
+                     match_source = "audio_script"
+                     try:
+                        idx = session.audio_script.lower().find(lower_query)
+                        start = max(0, idx - 40)
+                        end = min(len(session.audio_script), idx + len(query) + 40)
+                        snippet = "..." + session.audio_script[start:end] + "..."
+                     except:
+                        pass
+
+                # Check type match
+                elif session.type and lower_query in session.type.lower():
+                    match_source = "type"
+            
+            # If no query but filtering by type (or just listing), we can say match is none or filter
+            if not query and type:
+                 match_source = "filter"
+
+            formatted_results.append({
+                "session": session,
+                "match_info": {
+                    "matched_in": match_source,
+                    "snippet": snippet
+                }
+            })
+            
+        return formatted_results
+        
+    except Exception as e:
+        print(f"Error searching meditations: {e}")
+        raise HTTPException(status_code=500, detail="Failed to search meditations")
 
 @app.get("/api/meditations", response_model=List[schemas.MeditationResponse])
 async def get_meditations(
@@ -168,62 +251,7 @@ async def get_random_quote():
         )
         
 # Audio Generation Integration
-from fastapi.staticfiles import StaticFiles
-from services.audio_service import generate_audio_from_text
-import datetime
-
-# Mount static directory for audio files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.post("/api/meditations/{meditation_id}/generate-audio", response_model=schemas.MeditationResponse)
-async def generate_meditation_audio(
-    meditation_id: int,
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    try:
-        # Fetch session
-        session = db.query(models.MeditationSession)\
-            .filter(models.MeditationSession.id == meditation_id)\
-            .filter(models.MeditationSession.user_id == user['uid'])\
-            .first()
-            
-        if not session:
-            raise HTTPException(status_code=404, detail="Meditation session not found")
-            
-        if session.audio_url:
-             # Just overwrite as per plan? Or return existing. 
-             # Let's overwrite to allow regeneration if they prefer.
-             pass
-
-        # Generate Audio
-        # Use stored tone as voice preference or similar
-        voice_tone = session.tone if session.tone else "calm"
-        voice_gender = session.voice_gender if session.voice_gender else "female"
-
-        # Use audio_script if available (new logic), else fallback to script (old logic compatibility)
-        text_to_speak = session.audio_script if session.audio_script else session.script
-        
-        audio_url = generate_audio_from_text(
-            text=text_to_speak,
-            tone=voice_tone,
-            gender=voice_gender
-        )
-        
-        # Update Session
-        session.audio_url = audio_url
-        session.voice_used = "Gemini TTS" # or specific voice name if configurable
-        session.audio_generated_at = datetime.datetime.now()
-        
-        db.commit()
-        db.refresh(session)
-        
-        return session
-        
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        print(f"Error generating audio for session {meditation_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate audio")
+# Removed backend-based TTS in favor of Frontend Web Speech API
+# No endpoints required.
 
     

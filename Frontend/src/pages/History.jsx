@@ -33,6 +33,7 @@ const History = () => {
         try {
             setLoading(true);
             const token = await currentUser.getIdToken();
+            console.log("Fetching history with token:", token ? "Present" : "Missing");
 
             // Build query params
             const params = new URLSearchParams();
@@ -57,15 +58,44 @@ const History = () => {
                 }
             });
 
+            if (response.status === 401) {
+                console.error("Unauthorized access. Redirecting to login.");
+                // Optional: navigate('/login') if you want to force it
+                setError("Session expired. Please log in again.");
+                return;
+            }
+
             if (!response.ok) {
-                throw new Error('Failed to fetch sessions');
+                const errData = await response.json().catch(() => ({}));
+                console.error("Fetch error details:", errData);
+                throw new Error(errData.detail || 'Failed to fetch sessions');
             }
 
             const data = await response.json();
-            // The API now returns a list of { session: {...}, match_info: {...} } objects
-            // We need to extract just the session part for the SessionList component
-            const extractedSessions = data.map(item => item.session);
-            setSessions(extractedSessions);
+            console.log("History API Response:", data); // Debug log
+
+            // Robust parsing: handle both wrapped search results and raw session lists
+            let extractedSessions = [];
+            if (Array.isArray(data)) {
+                extractedSessions = data.map(item => {
+                    // Check if it's a search wrapper (has .session property)
+                    if (item.session && item.match_info) {
+                        return item.session;
+                    }
+                    // Otherwise assume it's a raw session object
+                    return item;
+                });
+            } else {
+                console.error("Unexpected API response format (not an array)", data);
+                setError("Received invalid data from server");
+                return;
+            }
+
+            // Filter out any null/undefined items to prevent rendering crashes
+            const validSessions = extractedSessions.filter(item => item && typeof item === 'object');
+
+            console.log("Filtered Valid Sessions:", validSessions.length);
+            setSessions(validSessions);
             setError(null);
         } catch (err) {
             console.error("Error fetching sessions:", err);
@@ -102,28 +132,37 @@ const History = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden transition-colors duration-300">
+            {/* Background Decorations */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                <div className="absolute top-0 left-20 w-96 h-96 bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+                <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+            </div>
+
             <Navbar />
 
-            <div className="container mx-auto px-6 pt-28 pb-12">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div className="flex items-center gap-4">
-                        <Link to="/dashboard" className="p-2 hover:bg-white/50 rounded-full transition-colors text-gray-600">
+            <div className="container mx-auto px-6 pt-32 pb-12 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-gray-200/50 pb-8 animate-fade-in-up">
+                    <div className="flex items-center gap-5">
+                        <Link to="/dashboard" className="p-3 bg-white/80 hover:bg-white shadow-sm hover:shadow-md rounded-2xl transition-all text-gray-500 hover:text-violet-600 border border-gray-100">
                             <ArrowLeft className="h-6 w-6" />
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-600">
+                            <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 mb-2">
                                 Your Journey
                             </h1>
-                            <p className="text-gray-500">Track your meditation sessions and growth</p>
+                            <p className="text-gray-500 font-medium ml-1">Track your growth and revisit your favorite sessions</p>
                         </div>
                     </div>
 
-                    <SearchBar
-                        value={searchQuery}
-                        onChange={setSearchQuery}
-                        placeholder="Search by topic or content..."
-                    />
+                    <div className="w-full md:w-auto min-w-[300px]">
+                        <SearchBar
+                            value={searchQuery}
+                            onChange={setSearchQuery}
+                            placeholder="Search history..."
+                        />
+                    </div>
                 </div>
 
                 <div className="mb-8">

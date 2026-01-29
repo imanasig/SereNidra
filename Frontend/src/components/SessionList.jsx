@@ -55,12 +55,17 @@ const SessionList = ({ sessions, isLoading, error, onDeleteSession }) => {
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-                {sessions.map(session => (
-                    <SessionCard
+                {sessions.map((session, index) => (
+                    <div
                         key={session.id}
-                        session={session}
-                        onDelete={handleDeleteRequest}
-                    />
+                        className="animate-fade-in-up"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                        <SessionCard
+                            session={session}
+                            onDelete={handleDeleteRequest}
+                        />
+                    </div>
                 ))}
             </div>
 

@@ -43,21 +43,21 @@ const SessionHistory = () => {
     }, [currentUser]);
 
     return (
-        <div className="rounded-[2rem] p-8 border border-white/60 bg-gradient-to-br from-white via-purple-50/50 to-purple-100/50 backdrop-blur-xl h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <div className="rounded-[2rem] p-5 border border-white/60 bg-gradient-to-br from-white via-purple-50/50 to-purple-100/50 backdrop-blur-xl h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <History className="h-5 w-5 text-violet-600" />
                     Recent Sessions
                 </h3>
                 <button
                     onClick={() => navigate('/history')}
-                    className="text-sm font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 hover:underline"
+                    className="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 hover:underline"
                 >
                     View All
                 </button>
             </div>
 
-            <div className="space-y-4 flex-grow overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 flex-grow overflow-y-auto custom-scrollbar">
                 {loading && (
                     <div className="flex justify-center py-10">
                         <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
@@ -78,7 +78,7 @@ const SessionHistory = () => {
                 )}
 
                 {!loading && !error && sessions.map(session => (
-                    <SessionCard key={session.id} session={session} />
+                    <SessionCard key={session.id} session={session} compact={true} />
                 ))}
             </div>
         </div>
