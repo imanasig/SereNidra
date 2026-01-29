@@ -53,7 +53,7 @@ async def generate_meditation(
 ):
     try:
         # Generate script using LangChain/Gemini
-        script = generate_meditation_script(
+        generated_content = generate_meditation_script(
             type=request.type,
             duration=request.duration,
             preferences=request.preferences,
@@ -66,7 +66,9 @@ async def generate_meditation(
             duration=request.duration,
             preferences=request.preferences,
             tone=request.tone,
-            script=script,
+            voice_gender=request.voice_gender,
+            script=generated_content['visual_script'],
+            audio_script=generated_content['audio_script'],
             user_id=user['uid']
         )
         db.add(db_session)
@@ -164,5 +166,64 @@ async def get_random_quote():
             status_code=500,
             detail=f"Error generating quote: {str(e)}"
         )
+        
+# Audio Generation Integration
+from fastapi.staticfiles import StaticFiles
+from services.audio_service import generate_audio_from_text
+import datetime
+
+# Mount static directory for audio files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.post("/api/meditations/{meditation_id}/generate-audio", response_model=schemas.MeditationResponse)
+async def generate_meditation_audio(
+    meditation_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        # Fetch session
+        session = db.query(models.MeditationSession)\
+            .filter(models.MeditationSession.id == meditation_id)\
+            .filter(models.MeditationSession.user_id == user['uid'])\
+            .first()
+            
+        if not session:
+            raise HTTPException(status_code=404, detail="Meditation session not found")
+            
+        if session.audio_url:
+             # Just overwrite as per plan? Or return existing. 
+             # Let's overwrite to allow regeneration if they prefer.
+             pass
+
+        # Generate Audio
+        # Use stored tone as voice preference or similar
+        voice_tone = session.tone if session.tone else "calm"
+        voice_gender = session.voice_gender if session.voice_gender else "female"
+
+        # Use audio_script if available (new logic), else fallback to script (old logic compatibility)
+        text_to_speak = session.audio_script if session.audio_script else session.script
+        
+        audio_url = generate_audio_from_text(
+            text=text_to_speak,
+            tone=voice_tone,
+            gender=voice_gender
+        )
+        
+        # Update Session
+        session.audio_url = audio_url
+        session.voice_used = "Gemini TTS" # or specific voice name if configurable
+        session.audio_generated_at = datetime.datetime.now()
+        
+        db.commit()
+        db.refresh(session)
+        
+        return session
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error generating audio for session {meditation_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate audio")
 
     

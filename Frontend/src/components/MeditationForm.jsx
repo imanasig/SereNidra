@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Moon, Sun, Zap, Check, Sparkles, AlertCircle } from 'lucide-react';
 import ScriptDisplay from './ScriptDisplay';
+import MeditationDetail from './MeditationDetail';
 import { useAuth } from '../context/AuthContext';
 
 const MeditationForm = () => {
@@ -9,11 +10,12 @@ const MeditationForm = () => {
         duration: 10,
         preferences: '',
         tone: 'calm-soothing',
+        voice_gender: 'female',
     });
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [generatedScript, setGeneratedScript] = useState(null);
+    const [generatedSession, setGeneratedSession] = useState(null);
     const [apiError, setApiError] = useState(null);
     const { currentUser } = useAuth();
 
@@ -71,7 +73,7 @@ const MeditationForm = () => {
                 }
 
                 const data = await response.json();
-                setGeneratedScript(data.script);
+                setGeneratedSession(data);
 
             } catch (err) {
                 console.error("API Error:", err);
@@ -94,13 +96,30 @@ const MeditationForm = () => {
     };
 
     const handleReset = () => {
-        setGeneratedScript(null);
+        setGeneratedSession(null);
         setApiError(null);
         // Optional: Reset form data or keep it for easy modification
     };
 
-    if (generatedScript) {
-        return <ScriptDisplay script={generatedScript} onReset={handleReset} />;
+    if (generatedSession) {
+        return (
+            <div className="space-y-8 animate-fade-in w-full max-w-[95%] xl:max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Details & Audio */}
+                    <div className="lg:col-span-1">
+                        {/* We import MeditationDetail dynamically or assume it's available. 
+                            Note: 'MeditationDetail' default import needs to be added to top of file.
+                          */}
+                        <MeditationDetail session={generatedSession} onSessionUpdate={setGeneratedSession} />
+                    </div>
+
+                    {/* Right Column: Script */}
+                    <div className="lg:col-span-2">
+                        <ScriptDisplay script={generatedSession.script} onReset={handleReset} />
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -136,8 +155,8 @@ const MeditationForm = () => {
                                     type="button"
                                     onClick={() => setType(type.id)}
                                     className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-3 ${isSelected
-                                        ? 'border-violet-600 bg-violet-50'
-                                        : 'border-gray-100 hover:border-violet-200 hover:bg-gray-50'
+                                        ? 'border-violet-600 bg-violet-50 shadow-md ring-2 ring-violet-500/20 transform scale-[1.02]'
+                                        : 'border-gray-100 hover:border-violet-300 hover:bg-white hover:shadow-lg hover:-translate-y-1'
                                         }`}
                                 >
                                     <div className={`p-3 rounded-full ${type.bg} ${type.color}`}>
@@ -182,21 +201,50 @@ const MeditationForm = () => {
                         {errors.duration && <p className="text-rose-500 text-xs mt-1">{errors.duration}</p>}
                     </div>
 
-                    {/* Voice Tone */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Voice Style</label>
-                        <select
-                            name="tone"
-                            value={formData.tone}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 outline-none bg-white transition-all"
-                        >
-                            {voiceOptions.map(option => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="space-y-4">
+                        {/* Voice Gender */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Voice Gender</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, voice_gender: 'female' }))}
+                                    className={`px-4 py-2.5 rounded-xl border transition-all text-sm font-medium ${formData.voice_gender === 'female'
+                                        ? 'border-violet-600 bg-violet-50 text-violet-700 shadow-md ring-2 ring-violet-500/20'
+                                        : 'border-gray-200 bg-white text-gray-600 hover:border-violet-300 hover:shadow-md hover:-translate-y-0.5'
+                                        }`}
+                                >
+                                    Female Voice
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, voice_gender: 'male' }))}
+                                    className={`px-4 py-2.5 rounded-xl border transition-all text-sm font-medium ${formData.voice_gender === 'male'
+                                        ? 'border-violet-600 bg-violet-50 text-violet-700 shadow-md ring-2 ring-violet-500/20'
+                                        : 'border-gray-200 bg-white text-gray-600 hover:border-violet-300 hover:shadow-md hover:-translate-y-0.5'
+                                        }`}
+                                >
+                                    Male Voice
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Voice Tone */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Voice Style</label>
+                            <select
+                                name="tone"
+                                value={formData.tone}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 outline-none bg-white transition-all"
+                            >
+                                {voiceOptions.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -219,7 +267,7 @@ const MeditationForm = () => {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-lg shadow-lg hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {isSubmitting ? (
                         <>

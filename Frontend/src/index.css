@@ -10,6 +10,18 @@
   .animation-delay-4000 {
     animation-delay: 4s;
   }
+
+  .slider-thumb-violet {
+    @apply accent-violet-600 dark:accent-violet-400;
+    background-image: linear-gradient(#7c3aed, #7c3aed);
+    background-repeat: no-repeat;
+  }
+}
+
+/* For Webkit browsers to show track fill properly with the background-image trick */
+input[type=range].slider-thumb-violet::-webkit-slider-runnable-track {
+  background: transparent;
+  /* Rely on gradient */
 }
 
 @keyframes blob {
