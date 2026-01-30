@@ -1,19 +1,29 @@
+import { useState } from 'react';
 import { Clock, Calendar, Volume2, Sparkles, Tag } from 'lucide-react';
-import AudioGeneratorButton from './AudioGeneratorButton';
-import AudioPlayer from './AudioPlayer';
+import TextToSpeechPlayer from './TextToSpeechPlayer';
 
 const MeditationDetail = ({ session, onSessionUpdate }) => {
+    const [showPlayer, setShowPlayer] = useState(false);
+
+    // Safety checks
+    if (!session) return null;
+
     // Fix Timezone: assume backend sends UTC but might miss 'Z'. 
-    // Force UTC interpretation so it converts to local browser time (IST).
-    const dateString = session.created_at.endsWith('Z') ? session.created_at : session.created_at + 'Z';
-    const formattedDate = new Date(dateString).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    let formattedDate = "Unknown Date";
+    try {
+        const createdAt = session.created_at || new Date().toISOString();
+        const dateString = createdAt.endsWith('Z') ? createdAt : createdAt + 'Z';
+        formattedDate = new Date(dateString).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        console.warn("Date parsing error:", e);
+    }
 
     const handleAudioGenerated = (updatedSession) => {
         if (onSessionUpdate) {
@@ -36,7 +46,7 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Type</p>
                         <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                            {session.type.replace('-', ' ')}
+                            {(session.type || 'meditation').replace('-', ' ')}
                         </p>
                     </div>
                 </div>
@@ -84,22 +94,36 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
                     </div>
                 )}
 
-                {/* Audio Player Moved Here */}
+                {/* Audio Meditation Section */}
                 <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">Audio Meditation</h4>
-                    {session.audio_url ? (
-                        <AudioPlayer audioUrl={session.audio_url} title="Meditation Audio" />
+
+                    {!showPlayer ? (
+                        <button
+                            onClick={() => setShowPlayer(true)}
+                            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 group"
+                        >
+                            <Volume2 className="h-5 w-5" />
+                            <span>Generate Audio</span>
+                            <Sparkles className="h-4 w-4 opacity-70 group-hover:animate-pulse" />
+                        </button>
                     ) : (
-                        <AudioGeneratorButton
-                            meditationId={session.id}
-                            onAudioGenerated={handleAudioGenerated}
-                            className="w-full"
-                        />
+                        <div className="animate-fade-in">
+                            <TextToSpeechPlayer
+                                text={session.audio_script || session.script}
+                                tone={session.tone}
+                                gender={session.voice_gender}
+                            />
+                            <button
+                                onClick={() => setShowPlayer(false)}
+                                className="mt-3 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline w-full text-center transition-colors"
+                            >
+                                Reset Audio Options
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
-
-            {/* Removed bottom audio player div */}
         </div>
     );
 };

@@ -39,6 +39,7 @@ const MeditationDetailsPage = () => {
                 }
 
                 const data = await response.json();
+                console.log("Session Details API Response:", data); // Debug log
                 setSession(data);
             } catch (err) {
                 console.error("Error fetching session:", err);
@@ -136,7 +137,7 @@ const MeditationDetailsPage = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Details */}
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-1 space-y-6">
                         <MeditationDetail session={session} onSessionUpdate={setSession} />
                     </div>
 
