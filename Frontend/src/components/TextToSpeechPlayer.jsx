@@ -1,124 +1,84 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, Volume2, Settings2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Play, Pause, Square, Volume2 } from 'lucide-react';
 
-const TextToSpeechPlayer = ({ text, tone, gender = 'female' }) => {
+const TextToSpeechPlayer = ({ audioUrl, voiceUsed }) => {
+    const audioRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isPaused, setIsPaused] = useState(false);
-    const [voices, setVoices] = useState([]);
-    const [selectedVoice, setSelectedVoice] = useState(null);
-    const [supported, setSupported] = useState(true);
-
-    // Tone mapping to SpeechSynthesis parameters
-    const getSpeechParams = (tone) => {
-        const t = tone?.toLowerCase() || 'calm';
-        switch (t) {
-            case 'energetic':
-            case 'focus':
-                return { rate: 1.0, pitch: 1.1 };
-            case 'anxious': // For anxiety relief
-            case 'stress':
-                return { rate: 0.8, pitch: 0.9 }; // Slower, deeper
-            case 'calm':
-            case 'sleep':
-            default:
-                return { rate: 0.85, pitch: 0.95 }; // Slightly slow and soothing
-        }
-    };
-
-    const speechParams = getSpeechParams(tone);
-    const utteranceRef = useRef(null);
+    const [duration, setDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
 
     useEffect(() => {
-        if (!window.speechSynthesis) {
-            setSupported(false);
-            return;
-        }
+        const audio = audioRef.current;
+        if (!audio) return;
 
-        // Load voices
-        const updateVoices = () => {
-            const availableVoices = window.speechSynthesis.getVoices();
-            setVoices(availableVoices);
-
-            // Try to enable a good default voice based on gender preference or OS
-            // This is heuristic as voice names vary wildly across OS
-            const voice = availableVoices.find(v =>
-                (gender === 'female' && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google US English'))) ||
-                (gender === 'male' && (v.name.includes('Male') || v.name.includes('Daniel') || v.name.includes('Google UK English Male')))
-            ) || availableVoices[0];
-
-            setSelectedVoice(voice);
+        const setAudioData = () => {
+            setDuration(audio.duration);
+            setCurrentTime(audio.currentTime);
         };
 
-        updateVoices();
+        const setAudioTime = () => {
+            setCurrentTime(audio.currentTime);
+        };
 
-        // Voice loading is async in Chrome
-        window.speechSynthesis.onvoiceschanged = updateVoices;
+        const handleEnded = () => {
+            setIsPlaying(false);
+            setCurrentTime(0);
+        };
 
-        // Cleanup on unmount
+        // Events
+        audio.addEventListener('loadeddata', setAudioData);
+        audio.addEventListener('timeupdate', setAudioTime);
+        audio.addEventListener('ended', handleEnded);
+
         return () => {
-            window.speechSynthesis.cancel();
+            audio.removeEventListener('loadeddata', setAudioData);
+            audio.removeEventListener('timeupdate', setAudioTime);
+            audio.removeEventListener('ended', handleEnded);
         };
-    }, [gender]);
+    }, []);
 
-    const handlePlay = () => {
-        if (isPaused) {
-            window.speechSynthesis.resume();
-            setIsPaused(false);
-            setIsPlaying(true);
-            return;
+    // If audioUrl changes, reset
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.load();
+            setIsPlaying(false);
         }
+    }, [audioUrl]);
 
-        // Cancel any current speech
-        window.speechSynthesis.cancel();
+    const togglePlay = () => {
+        const audio = audioRef.current;
+        if (!audio) return;
 
-        // Create new utterance
-        // For long text, some browsers choke on a single giant string. 
-        // Simple strategy: Let the browser try first. If robust chunking is needed, 
-        // we'd split by sentences. For now, we will pass the full text but enable cancellation.
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        if (selectedVoice) utterance.voice = selectedVoice;
-        utterance.rate = speechParams.rate;
-        utterance.pitch = speechParams.pitch;
-        utterance.volume = 1;
-
-        utterance.onend = () => {
+        if (isPlaying) {
+            audio.pause();
             setIsPlaying(false);
-            setIsPaused(false);
-        };
-
-        utterance.onerror = (e) => {
-            console.error("Speech verification error", e);
-            setIsPlaying(false);
-        };
-
-        utteranceRef.current = utterance;
-        window.speechSynthesis.speak(utterance);
-        setIsPlaying(true);
-    };
-
-    const handlePause = () => {
-        window.speechSynthesis.pause();
-        setIsPaused(true);
-        setIsPlaying(false);
+        } else {
+            audio.play().catch(e => console.error("Playback failed:", e));
+            setIsPlaying(true);
+        }
     };
 
     const handleStop = () => {
-        window.speechSynthesis.cancel();
-        setIsPlaying(false);
-        setIsPaused(false);
-    };
-
-    if (!supported) {
-        return (
-            <div className="p-4 bg-amber-50 text-amber-800 rounded-xl text-sm">
-                Audio playback is not supported in this browser.
-            </div>
-        );
+        const audio = audioRef.current;
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+            setIsPlaying(false);
+        }
     }
+
+    const formatTime = (seconds) => {
+        if (!seconds) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <audio ref={audioRef} src={audioUrl} preload="metadata" />
+
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
@@ -127,45 +87,59 @@ const TextToSpeechPlayer = ({ text, tone, gender = 'female' }) => {
                     <div>
                         <h3 className="font-bold text-gray-900 dark:text-white text-sm">Listen to Meditation</h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {tone} • {selectedVoice ? selectedVoice.name.slice(0, 15) + '...' : 'Default Voice'}
+                            Voice: {voiceUsed || 'Gemini AI'}
                         </p>
                     </div>
                 </div>
             </div>
 
             {/* Controls */}
-            <div className="flex justify-center items-center gap-6">
-                <button
-                    onClick={handleStop}
-                    disabled={!isPlaying && !isPaused}
-                    className="p-3 text-gray-500 hover:text-rose-500 dark:text-gray-400 transition-colors disabled:opacity-30"
-                    title="Stop"
-                >
-                    <Square className="h-5 w-5 fill-current" />
-                </button>
+            <div className="flex flex-col gap-4">
+                <div className="flex justify-center items-center gap-6">
+                    <button
+                        onClick={handleStop}
+                        disabled={!isPlaying && currentTime === 0}
+                        className="p-3 text-gray-500 hover:text-rose-500 dark:text-gray-400 transition-colors disabled:opacity-30"
+                        title="Stop"
+                    >
+                        <Square className="h-5 w-5 fill-current" />
+                    </button>
 
-                {!isPlaying ? (
                     <button
-                        onClick={handlePlay}
-                        className="h-14 w-14 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
-                        title={isPaused ? "Resume" : "Play"}
+                        onClick={togglePlay}
+                        className={`h-14 w-14 rounded-full ${isPlaying ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30'} flex items-center justify-center hover:scale-105 transition-transform active:scale-95`}
+                        title={isPlaying ? "Pause" : "Play"}
                     >
-                        <Play className="h-6 w-6 fill-current ml-1" />
+                        {isPlaying ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 fill-current ml-1" />}
                     </button>
-                ) : (
-                    <button
-                        onClick={handlePause}
-                        className="h-14 w-14 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white flex items-center justify-center hover:scale-105 transition-transform active:scale-95"
-                        title="Pause"
-                    >
-                        <Pause className="h-6 w-6 fill-current" />
-                    </button>
-                )}
+
+                    {/* Placeholder for symmetry or extra controls */}
+                    <div className="w-11"></div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full space-y-1">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 cursor-pointer overflow-hidden"
+                        onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const percent = (e.clientX - rect.left) / rect.width;
+                            audioRef.current.currentTime = percent * duration;
+                        }}>
+                        <div
+                            className="bg-violet-600 h-full rounded-full transition-all duration-100"
+                            style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                        ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 font-medium">
+                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(duration)}</span>
+                    </div>
+                </div>
             </div>
 
             <div className="mt-4 text-center">
                 <p className="text-xs text-gray-400">
-                    Browser-native audio • No download required
+                    Generated by Gemini TTS • Server-side Audio
                 </p>
             </div>
         </div>

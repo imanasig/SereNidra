@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../config/firebase"; // adjust path if needed
@@ -16,6 +16,7 @@ const SignupForm = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -134,11 +135,10 @@ const SignupForm = () => {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="John Doe"
-                className={`block w-full pl-10 pr-3 py-2.5 border ${
-                  errors.fullName
+                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.fullName
                     ? "border-rose-500"
                     : "border-gray-200 dark:border-gray-700 focus:border-violet-500"
-                } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
+                  } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
               />
             </div>
             {errors.fullName && (
@@ -163,11 +163,10 @@ const SignupForm = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className={`block w-full pl-10 pr-3 py-2.5 border ${
-                  errors.email
+                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.email
                     ? "border-rose-500"
                     : "border-gray-200 dark:border-gray-700 focus:border-violet-500"
-                } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
+                  } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
               />
             </div>
             {errors.email && (
@@ -187,17 +186,23 @@ const SignupForm = () => {
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className={`block w-full pl-10 pr-3 py-2.5 border ${
-                  errors.password
+                className={`block w-full pl-10 pr-10 py-2.5 border ${errors.password
                     ? "border-rose-500"
                     : "border-gray-200 dark:border-gray-700 focus:border-violet-500"
-                } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
+                  } rounded-xl bg-white/50 dark:bg-gray-800/50 focus:outline-none focus:ring-4 focus:ring-violet-500/20`}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
             {errors.password && (
               <p className="text-rose-500 text-xs mt-1 ml-1">

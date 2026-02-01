@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Clock, Calendar, Volume2, Sparkles, Tag } from 'lucide-react';
+import { Clock, Calendar, Volume2, Sparkles, Tag, Loader2 } from 'lucide-react';
 import TextToSpeechPlayer from './TextToSpeechPlayer';
+import { useAuth } from '../context/AuthContext';
 
 const MeditationDetail = ({ session, onSessionUpdate }) => {
-    const [showPlayer, setShowPlayer] = useState(false);
+    const { currentUser } = useAuth();
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generationError, setGenerationError] = useState('');
 
     // Safety checks
     if (!session) return null;
@@ -25,9 +28,44 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
         console.warn("Date parsing error:", e);
     }
 
-    const handleAudioGenerated = (updatedSession) => {
-        if (onSessionUpdate) {
-            onSessionUpdate(updatedSession);
+    const handleGenerateAudio = async () => {
+        setIsGenerating(true);
+        setGenerationError('');
+        try {
+            const token = await currentUser.getIdToken();
+            const response = await fetch(`http://localhost:8000/api/meditations/${session.id}/audio`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    voice_gender: session.voice_gender || 'Female'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate audio');
+            }
+
+            const data = await response.json();
+
+            // Update session locally
+            const updatedSession = {
+                ...session,
+                audio_url: data.audio_url,
+                voice_used: session.voice_gender || 'Female',
+                audio_generated_at: new Date().toISOString()
+            };
+
+            if (onSessionUpdate) {
+                onSessionUpdate(updatedSession);
+            }
+        } catch (error) {
+            console.error("Audio generation error:", error);
+            setGenerationError("Failed to generate audio. Please try again.");
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -98,28 +136,30 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
                 <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">Audio Meditation</h4>
 
-                    {!showPlayer ? (
+                    {generationError && (
+                        <p className="text-rose-500 text-sm mb-4">{generationError}</p>
+                    )}
+
+                    {!session.audio_url && !isGenerating ? (
                         <button
-                            onClick={() => setShowPlayer(true)}
+                            onClick={handleGenerateAudio}
                             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 group"
                         >
                             <Volume2 className="h-5 w-5" />
                             <span>Generate Audio</span>
                             <Sparkles className="h-4 w-4 opacity-70 group-hover:animate-pulse" />
                         </button>
+                    ) : isGenerating ? (
+                        <div className="w-full py-6 flex flex-col items-center justify-center gap-2 text-violet-600 bg-violet-50 dark:bg-violet-900/10 rounded-2xl border border-violet-100 dark:border-violet-800">
+                            <Loader2 className="h-8 w-8 animate-spin" />
+                            <p className="text-sm font-medium">Generating Audio (this may take a moment)...</p>
+                        </div>
                     ) : (
                         <div className="animate-fade-in">
                             <TextToSpeechPlayer
-                                text={session.audio_script || session.script}
-                                tone={session.tone}
-                                gender={session.voice_gender}
+                                audioUrl={`http://localhost:8000${session.audio_url}`}
+                                voiceUsed={session.voice_used || session.voice_gender}
                             />
-                            <button
-                                onClick={() => setShowPlayer(false)}
-                                className="mt-3 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline w-full text-center transition-colors"
-                            >
-                                Reset Audio Options
-                            </button>
                         </div>
                     )}
                 </div>
