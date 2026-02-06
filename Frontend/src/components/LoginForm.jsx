@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,8 +12,10 @@ const LoginForm = () => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [authError, setAuthError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [resetEmailSent, setResetEmailSent] = useState(false);
 
-    const { login } = useAuth();
+    const { login, resetPassword } = useAuth();
     const navigate = useNavigate();
 
     const validate = () => {
@@ -58,6 +60,24 @@ const LoginForm = () => {
         }
     };
 
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        if (!formData.email) {
+            setErrors(prev => ({ ...prev, email: "Please enter your email to reset password" }));
+            return;
+        }
+
+        try {
+            await resetPassword(formData.email);
+            setResetEmailSent(true);
+            setAuthError('');
+            setTimeout(() => setResetEmailSent(false), 5000);
+        } catch (error) {
+            console.error("Reset Password Error:", error);
+            setAuthError("Failed to send reset email. Please check your email address.");
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -95,6 +115,13 @@ const LoginForm = () => {
                     </div>
                 )}
 
+                {resetEmailSent && (
+                    <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-xl flex items-start space-x-3 animate-fade-in">
+                        <Mail className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-green-600 dark:text-green-400">Password reset email sent! Check your inbox.</p>
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">Email Address</label>
@@ -117,20 +144,33 @@ const LoginForm = () => {
                     <div className="space-y-1">
                         <div className="flex justify-between items-center ml-1">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                            <a href="#" className="text-xs font-medium text-violet-600 hover:text-violet-500 transition-colors">Forgot Password?</a>
+                            <button
+                                type="button"
+                                onClick={handleForgotPassword}
+                                className="text-xs font-medium text-violet-600 hover:text-violet-500 transition-colors"
+                            >
+                                Forgot Password?
+                            </button>
                         </div>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Lock className="h-5 w-5 text-gray-400" />
                             </div>
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className={`block w-full pl-10 pr-3 py-2.5 border ${errors.password ? 'border-rose-500 ring-rose-200' : 'border-gray-200 dark:border-gray-700 focus:ring-violet-500/20 focus:border-violet-500'} rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm focus:outline-none focus:ring-4 transition-all duration-200 sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400`}
+                                className={`block w-full pl-10 pr-10 py-2.5 border ${errors.password ? 'border-rose-500 ring-rose-200' : 'border-gray-200 dark:border-gray-700 focus:ring-violet-500/20 focus:border-violet-500'} rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm focus:outline-none focus:ring-4 transition-all duration-200 sm:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400`}
                                 placeholder="••••••••"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                         {errors.password && <p className="text-rose-500 text-xs mt-1 ml-1">{errors.password}</p>}
                     </div>
