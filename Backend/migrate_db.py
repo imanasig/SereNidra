@@ -21,7 +21,8 @@ def migrate():
             "voice_used": "TEXT", 
             "audio_generated_at": "DATETIME",
             "audio_script": "TEXT",
-            "voice_gender": "TEXT"
+            "voice_gender": "TEXT",
+            "title": "TEXT" # New
         }
 
         for col, dtype in new_columns.items():

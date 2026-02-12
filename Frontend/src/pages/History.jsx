@@ -135,24 +135,24 @@ const History = () => {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden transition-colors duration-300">
             {/* Background Decorations */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-                <div className="absolute top-0 left-20 w-96 h-96 bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-                <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200/30 dark:bg-purple-900/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob"></div>
+                <div className="absolute top-0 left-20 w-96 h-96 bg-indigo-200/30 dark:bg-indigo-900/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+                <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-200/30 dark:bg-pink-900/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
             </div>
 
             <Navbar />
 
             <div className="container mx-auto px-6 pt-32 pb-12 relative z-10">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-gray-200/50 pb-8 animate-fade-in-up">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-gray-200/50 dark:border-gray-800/50 pb-8 animate-fade-in-up">
                     <div className="flex items-center gap-5">
-                        <Link to="/dashboard" className="p-3 bg-white/80 hover:bg-white shadow-sm hover:shadow-md rounded-2xl transition-all text-gray-500 hover:text-violet-600 border border-gray-100">
+                        <Link to="/dashboard" className="p-3 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 shadow-sm hover:shadow-md rounded-2xl transition-all text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 border border-gray-100 dark:border-gray-700">
                             <ArrowLeft className="h-6 w-6" />
                         </Link>
                         <div>
-                            <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 mb-2">
+                            <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 dark:from-violet-400 dark:via-fuchsia-400 dark:to-indigo-400 mb-2">
                                 Your Journey
                             </h1>
-                            <p className="text-gray-500 font-medium ml-1">Track your growth and revisit your favorite sessions</p>
+                            <p className="text-gray-500 dark:text-gray-400 font-medium ml-1">Track your growth and revisit your favorite sessions</p>
                         </div>
                     </div>
 

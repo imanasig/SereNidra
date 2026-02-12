@@ -1,13 +1,15 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-import google.generativeai as genai
+
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
 import schemas
-from services.llm_service import generate_meditation_script
+from services.llm_service import generate_meditation_script, analyze_mood
+from services.tts_service import generate_audio
 from auth import get_current_user
 
 # Load environment variables from .env file
@@ -16,14 +18,15 @@ load_dotenv()
 # Initialize Database Models
 models.Base.metadata.create_all(bind=engine)
 
-# Initialize Google Generative AI
+# Initialize Google GenAI Client
 api_key = os.getenv("GOOGLE_API_KEY")
+
 if not api_key:
     print("Warning: GOOGLE_API_KEY not found in environment variables.")
-    genai_configured = False
+    genai_client = None
 else:
-    genai.configure(api_key=api_key)
-    genai_configured = True
+    from google import genai
+    genai_client = genai.Client(api_key=api_key)
 
 app = FastAPI(title="Sleep Meditation Generator API", version="0.1.0")
 
@@ -35,6 +38,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/")
 async def root():
     return {"message": "Sleep Meditation Generator Backend Running"}
@@ -45,7 +51,19 @@ async def health_check():
 
 
 from typing import List, Optional
-from sqlalchemy import or_
+from sqlalchemy import or_, func
+
+@app.post("/api/mood/suggest", response_model=schemas.MoodResponse)
+async def suggest_from_mood(
+    request: schemas.MoodRequest,
+    user: dict = Depends(get_current_user)
+):
+    try:
+        suggestion = analyze_mood(request.mood_text)
+        return suggestion
+    except Exception as e:
+        print(f"Error analyzing mood: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze mood")
 
 @app.post("/api/meditations/generate", response_model=schemas.MeditationResponse)
 async def generate_meditation(
@@ -59,7 +77,9 @@ async def generate_meditation(
             type=request.type,
             duration=request.duration,
             preferences=request.preferences,
-            tone=request.tone
+            tone=request.tone,
+            health_conditions=request.health_conditions,
+            mood_before=request.mood_before
         )
         
         # Save to Database
@@ -69,9 +89,12 @@ async def generate_meditation(
             preferences=request.preferences,
             tone=request.tone,
             voice_gender=request.voice_gender,
+            title=generated_content.get('title', 'Untitled Session'),
             script=generated_content['visual_script'],
             audio_script=generated_content['audio_script'],
-            user_id=user['uid']
+            user_id=user['uid'],
+            health_conditions=",".join(request.health_conditions) if request.health_conditions else None,
+            mood_before=request.mood_before
         )
         db.add(db_session)
         db.commit()
@@ -227,15 +250,17 @@ async def delete_meditation(
 
 @app.get("/api/random-quote")
 async def get_random_quote():
-    if not genai_configured:
+    if not genai_client:
         raise HTTPException(
             status_code=500,
             detail="Google API key not configured."
         )
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        response = model.generate_content("Tell me a random inspirational quote")
+        response = genai_client.models.generate_content(
+            model='gemini-2.5-flash', 
+            contents="Tell me a random inspirational quote"
+        )
         
         return {
             "success": True,
@@ -251,7 +276,86 @@ async def get_random_quote():
         )
         
 # Audio Generation Integration
-# Removed backend-based TTS in favor of Frontend Web Speech API
-# No endpoints required.
+class AudioRequest(schemas.BaseModel):
+    voice_gender: str = "Female"
 
+@app.post("/api/meditations/{meditation_id}/audio")
+async def generate_meditation_audio(
+    meditation_id: int,
+    request: AudioRequest,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        # Fetch meditation
+        session = db.query(models.MeditationSession)\
+            .filter(models.MeditationSession.id == meditation_id)\
+            .filter(models.MeditationSession.user_id == user['uid'])\
+            .first()
+            
+        if not session:
+            raise HTTPException(status_code=404, detail="Meditation not found")
+            
+        if not session.audio_script:
+            raise HTTPException(status_code=400, detail="No audio script available for this session")
+            
+        # Generate Audio
+        audio_url, duration_seconds = await generate_audio(session.audio_script, voice_gender=request.voice_gender)
+        
+        # Calculate minutes (round to nearest minute, min 1)
+        duration_minutes = max(1, round(duration_seconds / 60))
+        
+        # Update DB
+        session.audio_url = audio_url
+        session.duration = duration_minutes # Update to actual generated length
+        session.voice_used = request.voice_gender
+        session.audio_generated_at = func.now()
+        
+        db.commit()
+        db.refresh(session)
+        
+        return {"audio_url": audio_url}
+        
+    except Exception as e:
+        print(f"Error generating audio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/meditations/{meditation_id}/mood-after", response_model=schemas.MeditationResponse)
+async def update_mood_after(
+    meditation_id: int,
+    request: schemas.MoodAfterRequest,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        session = db.query(models.MeditationSession)\
+            .filter(models.MeditationSession.id == meditation_id)\
+            .filter(models.MeditationSession.user_id == user['uid'])\
+            .first()
+            
+        if not session:
+            raise HTTPException(status_code=404, detail="Meditation not found")
+            
+        session.mood_after = request.mood_after
+        
+        # Calculate improvement score
+        mood_scores = {
+            "Very anxious": 9, "Overthinking": 8, "Burned out": 8,
+            "Sad": 7, "Frustrated": 7, "Restless": 6, "Low energy": 6,
+            "Slightly stressed": 5, "Distracted": 5, "Tired": 4,
+            "Calm": 2, "Peaceful": 1, "Hopeful": 2, "Numb": 3, "Angry": 7
+        }
+        
+        before_score = mood_scores.get(session.mood_before, 5)
+        after_score = mood_scores.get(session.mood_after, 5)
+        
+        session.improvement_score = before_score - after_score
+        
+        db.commit()
+        db.refresh(session)
+        
+        return session
+    except Exception as e:
+        print(f"Error updating mood after: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     

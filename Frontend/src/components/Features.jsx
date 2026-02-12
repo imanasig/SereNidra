@@ -29,7 +29,7 @@ const FEATURE_LIST = [
 
 const Features = () => {
     return (
-        <div id="features" className="bg-gray-50 dark:bg-gray-900 py-32 relative z-10">
+        <div id="features" className="bg-gray-50 dark:bg-slate-900 py-32 relative z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center">
                     <h2 className="text-lg text-violet-600 dark:text-violet-400 font-bold tracking-wide uppercase mb-3">Why SereNidra?</h2>
@@ -45,8 +45,8 @@ const Features = () => {
                     <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
                         {FEATURE_LIST.map((feature, index) => (
                             <div key={index} className="group relative">
-                                <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl blur-xl from-violet-200 to-fuchsia-200 dark:from-violet-900/40 dark:to-fuchsia-900/40 -z-10 transform group-hover:scale-110"></div>
-                                <div className="h-full bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl px-6 pb-8 pt-10 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                                <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl blur-xl from-violet-200 to-fuchsia-200 dark:from-white/10 dark:to-white/5 -z-10 transform group-hover:scale-110"></div>
+                                <div className="h-full bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl px-6 pb-8 pt-10 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 dark:hover:border-white/50 dark:hover:shadow-white/10">
                                     <div className="-mt-16 mb-6">
                                         <span className={`inline-flex items-center justify-center p-4 rounded-2xl shadow-lg bg-gradient-to-br ${feature.gradient} transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
                                             {feature.icon}

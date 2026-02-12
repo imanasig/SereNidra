@@ -1,37 +1,63 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from Backend.models import MeditationSession
+from Backend.models import MeditationSession, User
 from Backend.database import Base
 
 # Setup DB
-# Assuming running from root or Backend, let's try to be robust or just point incorrectly.
-# Since we run from Backend dir via uv run, the path 'Backend/meditations.db' is wrong relative to Backend dir.
-# It should be just 'meditations.db' if we are in Backend.
-SQLALCHEMY_DATABASE_URL = "sqlite:///meditations.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///Backend/meditations.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def verify_session():
+# Update Schema
+Base.metadata.create_all(bind=engine)
+
+def verify_schema():
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+    print("Tables in DB:", tables)
+    
+    if "users" in tables:
+        print("✅ 'users' table exists.")
+        columns = [c['name'] for c in inspector.get_columns("users")]
+        print("   Columns:", columns)
+    else:
+        print("❌ 'users' table missing!")
+
+    if "meditation_sessions" in tables:
+        print("✅ 'meditation_sessions' table exists.")
+        columns = [c['name'] for c in inspector.get_columns("meditation_sessions")]
+        if "audio_url" in columns and "user_id" in columns:
+            print("✅ 'meditation_sessions' has required columns.")
+        else:
+             print("❌ 'meditation_sessions' missing columns:", columns)
+    else:
+        print("❌ 'meditation_sessions' table missing!")
+
+def verify_data():
     db = SessionLocal()
     try:
         # Get the most recent session
         session = db.query(MeditationSession).order_by(MeditationSession.id.desc()).first()
         
         if session:
-            print("Session Found:")
+            print("\nLatest Session Found:")
             print(f"ID: {session.id}")
-            print(f"Type: {session.type}")
-            print(f"Duration: {session.duration}")
             print(f"User ID: {session.user_id}")
-            print(f"Tone: {session.tone}")
-            print(f"Script Preview: {session.script[:50]}...")
+            print(f"Audio URL: {session.audio_url}")
+            print(f"Voice: {session.voice_used}")
         else:
-            print("No sessions found in the database.")
+            print("\nNo sessions found in the database yet.")
+            
+        users = db.query(User).all()
+        print(f"\nTotal Users: {len(users)}")
+        for u in users:
+            print(f"User: {u.uid} ({u.email})")
             
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error querying data: {e}")
     finally:
         db.close()
 
 if __name__ == "__main__":
-    verify_session()
+    verify_schema()
+    verify_data()

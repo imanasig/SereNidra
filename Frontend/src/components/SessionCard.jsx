@@ -42,6 +42,8 @@ const SessionCard = ({ session, onDelete, compact = false }) => {
     const typeLabel = session.type ? session.type.replace('-', ' ') : 'Meditation';
     const durationLabel = session.duration || '?';
 
+    const displayTitle = session.title || typeLabel;
+
     const handleDeleteClick = (e) => {
         e.preventDefault(); // Prevent Link navigation
         e.stopPropagation(); // Standard stop propagation
@@ -61,7 +63,7 @@ const SessionCard = ({ session, onDelete, compact = false }) => {
                     {/* Content */}
                     <div className="flex-grow min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-bold text-gray-800 text-sm truncate capitalize">{typeLabel}</h3>
+                            <h3 className="font-bold text-gray-800 text-sm truncate capitalize">{displayTitle}</h3>
                             <span className="text-[10px] uppercase font-bold text-gray-400 shrink-0 bg-white/50 px-2 py-0.5 rounded-md">{date}</span>
                         </div>
 
@@ -74,8 +76,18 @@ const SessionCard = ({ session, onDelete, compact = false }) => {
                             <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> {durationLabel}m
                             </span>
-                            <span className="w-0.5 h-3 bg-gray-300 rounded-full"></span>
-                            <span>{session.tone || 'Standard'} Voice</span>
+                            {session.mood_before && (
+                                <>
+                                    <span className="w-0.5 h-3 bg-gray-300 rounded-full"></span>
+                                    <span className="text-violet-500 capitalize">{session.mood_before}</span>
+                                </>
+                            )}
+                            {session.health_conditions && (
+                                <>
+                                    <span className="w-0.5 h-3 bg-gray-300 rounded-full"></span>
+                                    <span className="text-teal-600 truncate max-w-[80px]">{session.health_conditions.split(',')[0]}</span>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -99,7 +111,7 @@ const SessionCard = ({ session, onDelete, compact = false }) => {
                             <Sparkles className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-800 capitalize tracking-tight">{typeLabel}</h3>
+                            <h3 className="font-bold text-gray-800 capitalize tracking-tight">{displayTitle}</h3>
                             <div className="flex items-center gap-2 text-xs font-medium text-gray-400 mt-0.5">
                                 <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" /> {durationLabel} min
@@ -128,11 +140,34 @@ const SessionCard = ({ session, onDelete, compact = false }) => {
                     {preview}
                 </p>
 
+                {/* Health & Mood Context */}
+                {(session.mood_before || session.health_conditions) && (
+                    <div className="flex flex-wrap gap-2 mb-4 relative z-10">
+                        {session.mood_before && (
+                            <span className="px-2 py-0.5 rounded-lg bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-bold border border-violet-200/50 dark:border-violet-700/50">
+                                Feel: {session.mood_before}
+                            </span>
+                        )}
+                        {session.health_conditions && session.health_conditions.split(',').slice(0, 2).map((h, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 text-[10px] font-bold border border-teal-200/50 dark:border-teal-700/50">
+                                {h.trim()}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="mt-auto pt-4 border-t border-gray-100/50 flex items-center justify-between relative z-10">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 py-1 bg-white/50 rounded-lg">
-                        {session.tone || 'Standard'} Voice
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 py-1 bg-white/50 rounded-lg">
+                            {session.tone || 'Standard'} Voice
+                        </span>
+                        {session.improvement_score > 0 && (
+                            <span className="text-[10px] font-bold text-fuchsia-500 uppercase tracking-wider px-2 py-1 bg-fuchsia-50 rounded-lg flex items-center gap-1">
+                                <Sparkles className="h-2 w-2" /> Improved
+                            </span>
+                        )}
+                    </div>
                     <span className={`text-xs font-bold ${styles.iconText} flex items-center gap-1 group-hover:translate-x-1 transition-transform`}>
                         View Details <span className="text-lg leading-none">&rarr;</span>
                     </span>

@@ -1,49 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SessionCard from './SessionCard';
 import { History, Loader2, AlertCircle } from 'lucide-react';
 
-const SessionHistory = () => {
-    const [sessions, setSessions] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const { currentUser } = useAuth();
+const SessionHistory = ({ sessions = [], loading = false, error = null }) => {
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchSessions = async () => {
-            if (!currentUser) return;
-
-            try {
-                setLoading(true);
-                const token = await currentUser.getIdToken();
-                const response = await fetch('http://localhost:8000/api/meditations', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch sessions');
-                }
-
-                const data = await response.json();
-                // Take only top 3 for the widget
-                setSessions(data.slice(0, 3));
-            } catch (err) {
-                console.error("Error fetching sessions:", err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchSessions();
-    }, [currentUser]);
+    // Internal fetching logic removed. Data is now passed via props.
 
     return (
-        <div className="rounded-[2rem] p-5 border border-white/60 bg-gradient-to-br from-white via-purple-50/50 to-purple-100/50 backdrop-blur-xl h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="rounded-[2rem] p-5 border border-white/60 dark:border-gray-700 bg-gradient-to-br from-white via-purple-50/50 to-purple-100/50 dark:from-gray-800 dark:via-gray-700/50 dark:to-gray-800 backdrop-blur-xl h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 dark:hover:border-white/50 dark:hover:shadow-white/10">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <History className="h-5 w-5 text-violet-600" />

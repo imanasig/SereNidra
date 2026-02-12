@@ -5,7 +5,7 @@ const MeditationGenerator = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="relative rounded-[2.5rem] p-8 md:p-10 overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-white/60 bg-gradient-to-br from-white via-indigo-50/50 to-indigo-100/50 backdrop-blur-xl">
+        <div className="relative rounded-[2.5rem] p-8 md:p-10 overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-white/60 dark:border-gray-700 bg-gradient-to-br from-white via-indigo-50/50 to-indigo-100/50 dark:from-gray-800 dark:via-gray-700/50 dark:to-gray-800 backdrop-blur-xl dark:hover:border-white/50 dark:hover:shadow-white/10">
             {/* Decorative Background */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-200/30 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-200/30 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>

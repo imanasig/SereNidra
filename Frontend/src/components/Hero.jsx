@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const Hero = () => {
     return (
-        <div className="relative overflow-hidden bg-white dark:bg-gray-900 pt-32 pb-32 space-y-24 min-h-screen flex items-center">
+        <div className="relative overflow-hidden bg-transparent pt-32 pb-32 space-y-24 min-h-screen flex items-center">
             <div className="relative z-10 w-full">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-4xl mx-auto">

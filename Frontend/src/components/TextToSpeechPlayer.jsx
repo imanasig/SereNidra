@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Square, Volume2 } from 'lucide-react';
+import BreathingAnimation from './BreathingAnimation';
 
-const TextToSpeechPlayer = ({ audioUrl, voiceUsed }) => {
+const TextToSpeechPlayer = ({ audioUrl, voiceUsed, onEnded, onPlay, onPause }) => {
     const audioRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
@@ -23,6 +24,8 @@ const TextToSpeechPlayer = ({ audioUrl, voiceUsed }) => {
         const handleEnded = () => {
             setIsPlaying(false);
             setCurrentTime(0);
+            if (onEnded) onEnded();
+            if (onPause) onPause();
         };
 
         // Events
@@ -35,7 +38,7 @@ const TextToSpeechPlayer = ({ audioUrl, voiceUsed }) => {
             audio.removeEventListener('timeupdate', setAudioTime);
             audio.removeEventListener('ended', handleEnded);
         };
-    }, []);
+    }, [onEnded, onPause]);
 
     // If audioUrl changes, reset
     useEffect(() => {
@@ -53,9 +56,11 @@ const TextToSpeechPlayer = ({ audioUrl, voiceUsed }) => {
         if (isPlaying) {
             audio.pause();
             setIsPlaying(false);
+            if (onPause) onPause();
         } else {
             audio.play().catch(e => console.error("Playback failed:", e));
             setIsPlaying(true);
+            if (onPlay) onPlay();
         }
     };
 
@@ -91,6 +96,17 @@ const TextToSpeechPlayer = ({ audioUrl, voiceUsed }) => {
                         </p>
                     </div>
                 </div>
+            </div>
+
+            {/* Breathing Animation */}
+            <div className="min-h-[120px] flex items-center justify-center mb-4 transition-all duration-500">
+                {isPlaying ? (
+                    <BreathingAnimation isPlaying={isPlaying} />
+                ) : (
+                    <div className="text-center py-6 text-gray-400 dark:text-gray-500 text-sm italic">
+                        Press play to begin your session
+                    </div>
+                )}
             </div>
 
             {/* Controls */}

@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import MeditationForm from './components/MeditationForm';
 import ProtectedRoute from './components/ProtectedRoute';
+import Contact from './pages/Contact';
 
 import MeditationDetailsPage from './pages/MeditationDetailsPage';
 
@@ -31,7 +32,7 @@ function App() {
           path="/generate"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50"><MeditationForm /></div>
+              <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900 transition-colors"><MeditationForm /></div>
             </ProtectedRoute>
           }
         />
@@ -56,9 +57,9 @@ function App() {
 
         {/* Placeholder routes for navigation links */}
         <Route path="/about" element={<About />} />
-        <Route path="/features" element={<div className="min-h-screen flex items-center justify-center text-2xl">Features Page Placeholder</div>} />
-        <Route path="/pricing" element={<div className="min-h-screen flex items-center justify-center text-2xl">Pricing Page Placeholder</div>} />
-        <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center text-2xl">Contact Page Placeholder</div>} />
+        <Route path="/features" element={<div className="min-h-screen flex items-center justify-center text-2xl bg-white dark:bg-gray-900 dark:text-white transition-colors">Features Page Placeholder</div>} />
+        <Route path="/pricing" element={<div className="min-h-screen flex items-center justify-center text-2xl bg-white dark:bg-gray-900 dark:text-white transition-colors">Pricing Page Placeholder</div>} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </Router>
   );

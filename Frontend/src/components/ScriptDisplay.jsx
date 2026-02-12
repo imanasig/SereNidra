@@ -45,33 +45,33 @@ const ScriptDisplay = ({ script, onReset }) => {
 
             {/* Main Content Card */}
             <div className="relative group">
-                {/* Decorative background elements */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-violet-600 rounded-3xl opacity-20 group-hover:opacity-30 transition duration-500 blur"></div>
+                {/* Enhanced Gradient Glow */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 rounded-3xl opacity-30 group-hover:opacity-40 blur-2xl transition duration-500"></div>
 
-                <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800">
+                <div className="relative backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 rounded-3xl shadow-2xl overflow-hidden border border-white/60 dark:border-gray-700/60 hover:shadow-violet-500/20 dark:hover:shadow-violet-500/10 transition-all">
 
                     {/* Toolbar */}
-                    <div className="glass px-8 py-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center sticky top-0 z-10 backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
-                        <div className="flex items-center gap-2 text-gray-400">
+                    <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 px-8 py-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 z-10">
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                             <Feather className="h-5 w-5" />
-                            <span className="text-sm font-medium uppercase tracking-wider">Generated Content</span>
+                            <span className="text-sm font-bold uppercase tracking-widest">Generated Content</span>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={handleCopy}
-                                className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-gray-600 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all border border-gray-200 dark:border-gray-700 hover:border-violet-200"
+                                className="group/btn flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 hover:from-violet-50 hover:to-purple-50 dark:hover:from-violet-900/30 dark:hover:to-purple-900/30 text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all border border-gray-200 dark:border-gray-600 hover:border-violet-300 dark:hover:border-violet-600 shadow-sm hover:shadow-md"
                                 title="Copy to Clipboard"
                             >
                                 {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                                <span className="text-sm font-medium hidden sm:block">{copied ? 'Copied' : 'Copy'}</span>
+                                <span className="text-sm font-semibold hidden sm:block">{copied ? 'Copied' : 'Copy'}</span>
                             </button>
                             <button
                                 onClick={handleDownload}
-                                className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-gray-600 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all border border-gray-200 dark:border-gray-700 hover:border-violet-200"
+                                className="group/btn flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 hover:from-violet-50 hover:to-purple-50 dark:hover:from-violet-900/30 dark:hover:to-purple-900/30 text-gray-700 dark:text-gray-300 hover:text-violet-600 dark:hover:text-violet-400 transition-all border border-gray-200 dark:border-gray-600 hover:border-violet-300 dark:hover:border-violet-600 shadow-sm hover:shadow-md"
                                 title="Download Text"
                             >
                                 <Download className="h-4 w-4" />
-                                <span className="text-sm font-medium hidden sm:block">Download</span>
+                                <span className="text-sm font-semibold hidden sm:block">Download</span>
                             </button>
                         </div>
                     </div>
@@ -95,9 +95,9 @@ const ScriptDisplay = ({ script, onReset }) => {
                                     }
                                     if (part.startsWith('[') && part.endsWith(']')) {
                                         return (
-                                            <div key={index} className="my-1 flex justify-start">
-                                                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800 select-none shadow-sm cursor-default">
-                                                    <Sparkles className="w-3 h-3 mr-2 opacity-70" />
+                                            <div key={index} className="my-1.5 flex justify-start">
+                                                <span className="inline-flex items-center px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/40 dark:to-yellow-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 select-none shadow-md shadow-amber-500/20 cursor-default hover:scale-105 transition-transform">
+                                                    <Sparkles className="w-3.5 h-3.5 mr-2 opacity-80" />
                                                     {part.slice(1, -1)}
                                                 </span>
                                             </div>
@@ -109,16 +109,16 @@ const ScriptDisplay = ({ script, onReset }) => {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-6 md:p-8 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="text-sm text-gray-500 italic flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-amber-400" />
+                    <div className="p-6 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/70 dark:to-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="text-sm text-gray-500 dark:text-gray-400 italic flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-amber-500" />
                             Generated with SereNidra AI
                         </div>
                         <button
                             onClick={onReset}
-                            className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold hover:shadow-lg hover:shadow-violet-500/30 hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
+                            className="group/reset flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-bold hover:shadow-2xl hover:shadow-violet-500/40 hover:-translate-y-1 hover:scale-105 transition-all duration-300 active:scale-95"
                         >
-                            <RotateCcw className="h-4 w-4" />
+                            <RotateCcw className="h-4 w-4 group-hover/reset:rotate-180 transition-transform duration-500" />
                             Create Another
                         </button>
                     </div>
