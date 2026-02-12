@@ -50,7 +50,7 @@ const History = () => {
             // The previous /api/meditations endpoint is simple, but search is better.
             // However, to be safe and efficient, let's use the new endpoint.
 
-            const url = `http://localhost:8000/api/meditations/search?${params.toString()}`;
+            const url = `${import.meta.env.VITE_API_BASE_URL}/api/meditations/search?${params.toString()}`;
 
             const response = await fetch(url, {
                 headers: {
@@ -112,7 +112,7 @@ const History = () => {
     const handleDeleteSession = async (sessionId) => {
         try {
             const token = await currentUser.getIdToken();
-            const response = await fetch(`http://localhost:8000/api/meditations/${sessionId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations/${sessionId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

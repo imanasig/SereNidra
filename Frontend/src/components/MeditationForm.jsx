@@ -87,7 +87,7 @@ const MeditationForm = () => {
         setApiError(null);
         try {
             const token = await currentUser.getIdToken();
-            const response = await fetch('http://localhost:8000/api/mood/suggest', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/mood/suggest`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ const MeditationForm = () => {
 
                 const token = await currentUser.getIdToken();
 
-                const response = await fetch('http://localhost:8000/api/meditations/generate', {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

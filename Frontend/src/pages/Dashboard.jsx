@@ -20,7 +20,7 @@ const Dashboard = () => {
             try {
                 setLoading(true);
                 const token = await currentUser.getIdToken();
-                const response = await fetch('http://localhost:8000/api/meditations', {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

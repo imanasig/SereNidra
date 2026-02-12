@@ -35,7 +35,7 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
         setGenerationError('');
         try {
             const token = await currentUser.getIdToken();
-            const response = await fetch(`http://localhost:8000/api/meditations/${session.id}/audio`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations/${session.id}/audio`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -74,7 +74,7 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
     const handleMoodSubmit = async (moodAfter) => {
         try {
             const token = await currentUser.getIdToken();
-            const response = await fetch(`http://localhost:8000/api/meditations/${session.id}/mood-after`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations/${session.id}/mood-after`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -198,7 +198,7 @@ const MeditationDetail = ({ session, onSessionUpdate }) => {
                         ) : (
                             <div className="animate-fade-in">
                                 <TextToSpeechPlayer
-                                    audioUrl={`http://localhost:8000${session.audio_url}`}
+                                    audioUrl={`${import.meta.env.VITE_API_BASE_URL}${session.audio_url}`}
                                     voiceUsed={session.voice_used || session.voice_gender}
                                     onEnded={() => {
                                         setShowMoodModal(true);

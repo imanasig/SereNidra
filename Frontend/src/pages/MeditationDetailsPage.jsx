@@ -24,7 +24,7 @@ const MeditationDetailsPage = () => {
             try {
                 setLoading(true);
                 const token = await currentUser.getIdToken();
-                const response = await fetch(`http://localhost:8000/api/meditations/${id}`, {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -59,7 +59,7 @@ const MeditationDetailsPage = () => {
     const confirmDelete = async () => {
         try {
             const token = await currentUser.getIdToken();
-            const response = await fetch(`http://localhost:8000/api/meditations/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/meditations/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
