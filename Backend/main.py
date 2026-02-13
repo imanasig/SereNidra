@@ -47,7 +47,10 @@ app.add_middleware(
 )
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+AUDIO_DIR = Path("static/audio")
+AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+
+app.mount("/static/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 
 @app.get("/")
 async def root():
@@ -56,7 +59,6 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
 
 from typing import List, Optional
 from sqlalchemy import or_, func
