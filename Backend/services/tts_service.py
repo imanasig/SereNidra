@@ -16,10 +16,15 @@ else:
 # AUDIO_DIR = "static/audio"
 # os.makedirs(AUDIO_DIR, exist_ok=True)
 
+# from pathlib import Path
+
+# BASE_DIR = Path(__file__).resolve().parent.parent
+# AUDIO_DIR = BASE_DIR / "static" / "audio"
+# AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-AUDIO_DIR = BASE_DIR / "static" / "audio"
+AUDIO_DIR = Path("static/audio")
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 async def generate_audio(text: str, voice_gender: str = "Female") -> tuple[str, float]:
