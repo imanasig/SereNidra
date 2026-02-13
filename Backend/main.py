@@ -57,7 +57,7 @@ app.mount("/static/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 async def root():
     return {"message": "Sleep Meditation Generator Backend Running"}
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
     return {"status": "healthy"}
 
