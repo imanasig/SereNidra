@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import shutil
+from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
