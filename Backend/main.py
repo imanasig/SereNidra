@@ -283,51 +283,6 @@ async def get_random_quote():
             detail=f"Error generating quote: {str(e)}"
         )
         
-# # Audio Generation Integration
-# class AudioRequest(schemas.BaseModel):
-#     voice_gender: str = "Female"
-
-# @app.post("/api/meditations/{meditation_id}/audio")
-# async def generate_meditation_audio(
-#     meditation_id: int,
-#     request: AudioRequest,
-#     db: Session = Depends(get_db),
-#     user: dict = Depends(get_current_user)
-# ):
-#     try:
-#         # Fetch meditation
-#         session = db.query(models.MeditationSession)\
-#             .filter(models.MeditationSession.id == meditation_id)\
-#             .filter(models.MeditationSession.user_id == user['uid'])\
-#             .first()
-            
-#         if not session:
-#             raise HTTPException(status_code=404, detail="Meditation not found")
-            
-#         if not session.audio_script:
-#             raise HTTPException(status_code=400, detail="No audio script available for this session")
-            
-#         # Generate Audio
-#         audio_url, duration_seconds = await generate_audio(session.audio_script, voice_gender=request.voice_gender)
-        
-#         # Calculate minutes (round to nearest minute, min 1)
-#         duration_minutes = max(1, round(duration_seconds / 60))
-        
-#         # Update DB
-#         session.audio_url = audio_url
-#         session.duration = duration_minutes # Update to actual generated length
-#         session.voice_used = request.voice_gender
-#         session.audio_generated_at = func.now()
-        
-#         db.commit()
-#         db.refresh(session)
-        
-#         return {"audio_url": audio_url}
-        
-#     except Exception as e:
-#         print(f"Error generating audio: {e}")
-#         raise HTTPException(status_code=500, detail=str(e))
-
 # Audio Generation Integration
 class AudioRequest(schemas.BaseModel):
     voice_gender: str = "Female"
@@ -340,51 +295,40 @@ async def generate_meditation_audio(
     user: dict = Depends(get_current_user)
 ):
     try:
+        # Fetch meditation
         session = db.query(models.MeditationSession)\
             .filter(models.MeditationSession.id == meditation_id)\
             .filter(models.MeditationSession.user_id == user['uid'])\
             .first()
-
+            
         if not session:
             raise HTTPException(status_code=404, detail="Meditation not found")
-
+            
         if not session.audio_script:
-            raise HTTPException(status_code=400, detail="No audio script available")
-
-        # Generate raw audio file (temporary path returned)
-        temp_audio_path, duration_seconds = await generate_audio(
-            session.audio_script,
-            voice_gender=request.voice_gender
-        )
-
-        # Ensure static/audio directory exists
-        os.makedirs("static/audio", exist_ok=True)
-
-        # Create unique filename
-        filename = f"{uuid.uuid4()}.wav"
-        final_path = os.path.join("static", "audio", filename)
-
-        # Move file into static/audio
-        shutil.move(temp_audio_path, final_path)
-
-        # Build full public URL
-        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://serenidra.onrender.com")
-        public_url = f"{base_url}/static/audio/{filename}"
-
+            raise HTTPException(status_code=400, detail="No audio script available for this session")
+            
+        # Generate Audio
+        audio_url, duration_seconds = await generate_audio(session.audio_script, voice_gender=request.voice_gender)
+        
+        # Calculate minutes (round to nearest minute, min 1)
+        duration_minutes = max(1, round(duration_seconds / 60))
+        
         # Update DB
-        session.audio_url = public_url
-        session.duration = max(1, round(duration_seconds / 60))
+        session.audio_url = audio_url
+        session.duration = duration_minutes # Update to actual generated length
         session.voice_used = request.voice_gender
         session.audio_generated_at = func.now()
-
+        
         db.commit()
         db.refresh(session)
-
-        return {"audio_url": public_url}
-
+        
+        return {"audio_url": audio_url}
+        
     except Exception as e:
-        print("Audio generation error:", e)
+        print(f"Error generating audio: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @app.post("/api/meditations/{meditation_id}/mood-after", response_model=schemas.MeditationResponse)
 async def update_mood_after(
